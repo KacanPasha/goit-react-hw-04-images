@@ -61,7 +61,7 @@ export const App = () => {
     if (searchQuery !== '' || page !== 1 || error) {
       fetchData();
     }
-  }, [searchQuery, page, error]);
+  }, [searchQuery, page]);
 
   const loadMore = () => {
     setPage(prevPage => prevPage + 1);
