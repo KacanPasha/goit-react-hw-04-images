@@ -1,97 +1,92 @@
-import { Component } from "react"
+import { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { fetchImages } from "Api";
-import { SearchBar } from "./Searchbar/Searchbar";
-import { ImageGallery } from "./ImageGallery/ImageGallery";
-import { ButtonLoadMore } from "./Button/Button";
-import { Loader } from "./Loader/Loader";
+import { fetchImages } from 'Api';
+import { SearchBar } from './Searchbar/Searchbar';
+import { ImageGallery } from './ImageGallery/ImageGallery';
+import { ButtonLoadMore } from './Button/Button';
+import { Loader } from './Loader/Loader';
 import '../styles.css';
 
-export class App extends Component {
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
-	state = {
-		images: [],
-		searchQuery: '',
-		page: 1,
-		totalImages: null,
-		loading: false,
-		error: false,
-	};
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(false);
 
-	async componentDidUpdate(prevProps, prevState) {
-		if (prevState.searchQuery !== this.state.searchQuery ||
-			prevState.page !== this.state.page)
-		{
-			try {
-					this.setState({ loading: true, error: false });
-				const { totalHits, hits } = await fetchImages(this.state.searchQuery, this.state.page);
-					this.setState(prevState => {
-						return {
-							images: [...prevState.images, ...hits],
-						}
-					});
-				this.setState({ totalImages: totalHits, });
+        const { totalHits, hits } = await fetchImages(searchQuery, page);
 
-				if (Math.ceil(totalHits / 12) === this.state.page) {
-					toast.success("We're sorry, but you've reached the end of search results.",
-					{
-							style: {
-								fontSize: '18px',
-								padding: '16px',
-								position: 'center-center',
-							},
-						})
-				};
+        setImages(prevImages => [...prevImages, ...hits]);
+        setTotalPages(totalHits);
 
-				if (hits.length === 0) {
-					toast.success("Sorry, there are no images matching your search query. Please try again.",
-					{
-							style: {
-								fontSize: '18px',
-								padding: '16px',
-								position: 'center-center',
-							},
-						})
-				};
+        if (Math.ceil(totalPages / 12) === page) {
+          toast.success(
+            "We're sorry, but you've reached the end of search results.",
+            {
+              style: {
+                fontSize: '18px',
+                padding: '16px',
+                position: 'center-center',
+              },
+            }
+          );
+        }
 
-			} catch (error) {
-				this.setState({ error: true, });
-				
-			} finally {
-				this.setState({ loading: false });
-			}
-		};
-	};
+        if (hits.length === 0) {
+          toast.success(
+            'Sorry, there are no images matching your search query. Please try again.',
+            {
+              style: {
+                fontSize: '18px',
+                padding: '16px',
+                position: 'center-center',
+              },
+            }
+          );
+        }
+      } catch (error) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-	addSearchQuery = (value) => {
-		this.setState({
-			searchQuery: value.searchQuery.trim(),
-		});
-		if (this.state.searchQuery !== value.searchQuery.trim()) {
-			this.setState({
-				images: [],
-				page: 1,
-			})
-		};
-	};
+    if (searchQuery !== '' || page !== 1) {
+      fetchData();
+    }
+  }, [searchQuery, page]);
 
-	loadMore = () => {
-		this.setState(prevState => ({
-			page: prevState.page + 1,
-		}));
-	};
+  const loadMore = () => {
+    setPage(prevPage => prevPage + 1);
+  };
 
-	render() {
-		const { images, loading, totalImages, page } = this.state;
-		const renderBtnLoadMore = (Math.ceil(totalImages / 12) !== page);
-		return (
-			<div className="App">
-				<SearchBar onAddSearchQuery={this.addSearchQuery} />
-				{images.length > 0 && <ImageGallery gallery={images} />}
-				{images.length > 0 && renderBtnLoadMore && <ButtonLoadMore onLoadMore={this.loadMore} />}
-				{loading && <Loader loading={loading} />}
-				<Toaster />
-			</div>
-		);
-	};
+  const addSearchQuery = value => {
+    setSearchQuery(value.searchQuery.trim());
+
+    if (searchQuery !== value.searchQuery.trim()) {
+      setPage(1);
+      setImages([]);
+    }
+  };
+
+  const renderBtnLoadMore = Math.ceil(totalPages / 12) !== page;
+
+  return (
+    <div className="App">
+      <SearchBar onAddSearchQuery={addSearchQuery} />
+      {images.length > 0 && <ImageGallery gallery={images} />}
+      {images.length > 0 && renderBtnLoadMore && (
+        <ButtonLoadMore onLoadMore={loadMore} />
+      )}
+      {loading && <Loader loading={loading} />}
+      <Toaster />
+    </div>
+  );
 };
