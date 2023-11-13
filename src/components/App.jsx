@@ -26,7 +26,7 @@ export const App = () => {
         setImages(prevImages => [...prevImages, ...hits]);
         setTotalPages(totalHits);
 
-        if (Math.ceil(totalPages / 12) === page) {
+        if (Math.ceil(totalHits / 12) === page) {
           toast.success(
             "We're sorry, but you've reached the end of search results.",
             {
@@ -58,10 +58,10 @@ export const App = () => {
       }
     };
 
-    if (searchQuery !== '' || page !== 1) {
+    if (searchQuery !== '' || page !== 1 || error) {
       fetchData();
     }
-  }, [searchQuery, page]);
+  }, [searchQuery, page, error]);
 
   const loadMore = () => {
     setPage(prevPage => prevPage + 1);
@@ -90,3 +90,4 @@ export const App = () => {
     </div>
   );
 };
+
