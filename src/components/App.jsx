@@ -20,13 +20,13 @@ export const App = () => {
       try {
         setLoading(true);
         setError(false);
-
+  
         const { totalHits, hits } = await fetchImages(searchQuery, page);
-
+  
         setImages(prevImages => [...prevImages, ...hits]);
         setTotalPages(totalHits);
-
-        if (Math.ceil(totalHits / 12) === page) {
+  
+        if (Math.ceil(totalPages / 12) === page) {
           toast.success(
             "We're sorry, but you've reached the end of search results.",
             {
@@ -38,7 +38,7 @@ export const App = () => {
             }
           );
         }
-
+  
         if (hits.length === 0) {
           toast.success(
             'Sorry, there are no images matching your search query. Please try again.',
@@ -57,11 +57,12 @@ export const App = () => {
         setLoading(false);
       }
     };
-
+  
     if (searchQuery !== '' || page !== 1 || error) {
       fetchData();
     }
-  }, [searchQuery, page]);
+  }, [searchQuery, page, error]); 
+  
 
   const loadMore = () => {
     setPage(prevPage => prevPage + 1);
